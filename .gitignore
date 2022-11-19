@@ -4,6 +4,9 @@
 # Build Folder
 build/
 
+# .vscode Folder
+.vscode/
+
 # Compiled Object files
 *.slo
 *.lo
