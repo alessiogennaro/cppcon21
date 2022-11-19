@@ -44,10 +44,7 @@ public:
   bfs_edge_range(const bfs_edge_range&)  = delete;
   bfs_edge_range(const bfs_edge_range&&) = delete;
 
-  bool empty() {
-    bool b = Q_.empty();
-    return b;
-  }
+  bool empty() { return Q_.empty(); }
 
   class bfs_edge_range_iterator {
   private:
@@ -114,6 +111,8 @@ private:
   Queue             Q_;
   std::vector<bool> visited_;
 };
+
+
 
 template <typename Graph, typename PriorityQueue>
 requires adjacency_list<Graph>

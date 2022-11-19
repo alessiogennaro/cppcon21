@@ -26,9 +26,8 @@
 #include <vector>
 
 /**
- * Tuple utilities to get the "cdr" of a tuple (for our purposes)
+ * Tuple utilities to get the "cdr" of a tuple (for our purposes). Returns a tuple
  */
-
 template <size_t N, typename... Ts>
 auto nth_cdr(std::tuple<Ts...> t) {
   return [&]<std::size_t... Ns>(std::index_sequence<Ns...>) { return std::tuple{std::get<Ns + N>(t)...}; }
@@ -50,34 +49,41 @@ auto graph_edge(std::tuple<Ts...> t) {
  */
 template <class EdgeList, class Adjacency>
 void push_back_fill(const EdgeList& edge_list, Adjacency& adj, bool directed, size_t idx) {
-  const size_t jdx = (idx + 1) % 2;
+  const size_t jdx = (idx + 1) % 2; // what is jdx used for?
 
   for (auto&& e : edge_list) {
-    if (0 == idx) {
+    if (idx == 0) { // probably should use jdx here
       std::apply(
           [&](auto... properties) {
+         // adj[u].emplace_back(v, properties...); 
             adj[std::get<0>(e)].emplace_back(std::get<1>(e), properties...);
           },
-          props(e));
+          // returns a tuple containing the properties of e
+          props(e)
+      );
       if (!directed) {
         std::apply(
             [&](auto... properties) {
+           // adj[v].emplace_back(u, properties...);   
               adj[std::get<1>(e)].emplace_back(std::get<0>(e), properties...);
             },
-            props(e));
+            props(e)
+        );
       }
     } else {
       std::apply(
           [&](auto... properties) {
             adj[std::get<1>(e)].emplace_back(std::get<0>(e), properties...);
           },
-          props(e));
+          props(e)
+      );
       if (!directed) {
         std::apply(
             [&](auto... properties) {
               adj[std::get<0>(e)].emplace_back(std::get<1>(e), properties...);
             },
-            props(e));
+            props(e)
+        );
       }
     }
   }
@@ -98,15 +104,20 @@ auto make_index_map(const R& range) {
 }
 
 /**
- * Make an edge list with properties copied from original data, e.g., vector<tuple<size_t, size_t, props...>>
+ * Make an edge list (without properties) copied from original data, e.g., vector<tuple<size_t, size_t, props...>>
  */
 //template <template <class> class I = std::vector, class M, std::ranges::random_access_range E>
-template <class M, std::ranges::random_access_range E, class EdgeList = std::vector<decltype(std::tuple_cat(std::tuple<size_t, size_t>()))>>
+template <class M,
+          std::ranges::random_access_range E,
+          class EdgeList = std::vector<decltype(std::tuple_cat(std::tuple<size_t, size_t>()))>>
 auto make_plain_edges(M& map, const E& edges) {
   EdgeList index_edges;
 
   for (auto&& e : edges) {
-    std::apply([&](auto&& u, auto&& v, auto... props_) { index_edges.push_back(std::make_tuple(map[u], map[v])); }, e);
+    std::apply(   // applies a function on tuple e
+      [&](auto&& u, auto&& v, auto... props_) { index_edges.push_back(std::make_tuple(map[u], map[v])); },
+      e
+    );
   }
 
   return index_edges;
@@ -115,13 +126,17 @@ auto make_plain_edges(M& map, const E& edges) {
 /**
  * Make an edge list with properties copied from original data, e.g., vector<tuple<size_t, size_t, props...>>
  */
-template <class M, std::ranges::random_access_range E,
+template <class M,
+          std::ranges::random_access_range E,
           class EdgeList = std::vector<decltype(std::tuple_cat(std::tuple<size_t, size_t>(), props(E()[0])))>>
 auto make_property_edges(M& map, const E& edges) {
   EdgeList index_edges;
 
   for (auto&& e : edges) {
-    std::apply([&](auto&& u, auto&& v, auto... props_) { index_edges.push_back(std::make_tuple(map[u], map[v], props_...)); }, e);
+    std::apply(
+      [&](auto&& u, auto&& v, auto... props_) { index_edges.push_back(std::make_tuple(map[u], map[v], props_...)); },
+      e
+    );
   }
 
   return index_edges;
@@ -129,8 +144,11 @@ auto make_property_edges(M& map, const E& edges) {
 
 /**
  * Make an edge list indexing back to the original data, e.g., vector<tuple<size_t, size_t, size_t>>
+ * TODO: find the use of this function
  */
-template <class I = std::vector<std::tuple<size_t, size_t, size_t>>, class M, std::ranges::random_access_range E>
+template <class I = std::vector<std::tuple<size_t, size_t, size_t>>,
+          class M,
+          std::ranges::random_access_range E>
 auto make_index_edges(M& map, const E& edges) {
 
   auto index_edges = I();
@@ -149,7 +167,9 @@ auto make_index_edges(M& map, const E& edges) {
 /**  
  *  Make a plain graph from data, e.g., vector<vector<index>>
  */
-template <std::ranges::random_access_range V, std::ranges::random_access_range E, adjacency_list Graph = std::vector<std::vector<size_t>>>
+template <std::ranges::random_access_range V,
+          std::ranges::random_access_range E,
+          adjacency_list Graph = std::vector<std::vector<size_t>>>
 auto make_plain_graph(const V& vertices, const E& edges, bool directed = true, size_t idx = 0) {
   auto vertex_map  = make_index_map(vertices);
   auto index_edges = make_plain_edges(vertex_map, edges);
@@ -163,7 +183,8 @@ auto make_plain_graph(const V& vertices, const E& edges, bool directed = true, s
 /**  
  *  Make an index graph from data, e.g., vector<vector<tuple<index, index>>>
  */
-template <std::ranges::random_access_range V, std::ranges::random_access_range E,
+template <std::ranges::random_access_range V,
+          std::ranges::random_access_range E,
           adjacency_list Graph = std::vector<std::vector<std::tuple<size_t, size_t>>>>
 auto make_index_graph(const V& vertices, const E& edges, bool directed = true, size_t idx = 0) {
 
@@ -171,7 +192,6 @@ auto make_index_graph(const V& vertices, const E& edges, bool directed = true, s
   auto index_edges = make_index_edges(vertex_map, edges);
 
   Graph G(size(vertices));
-
   push_back_fill(index_edges, G, directed, idx);
 
   return G;
@@ -180,7 +200,8 @@ auto make_index_graph(const V& vertices, const E& edges, bool directed = true, s
 /**  
  *  Make a property graph from data, e.g., vector<vector<tuple<index, properties...>>>
  */
-template <std::ranges::random_access_range V, std::ranges::forward_range E,
+template <std::ranges::random_access_range V,
+          std::ranges::forward_range E,
           adjacency_list Graph = std::vector<std::vector<decltype(std::tuple_cat(std::make_tuple(size_t{}), props(*(begin(E{})))))>>>
 auto make_property_graph(const V& vertices, const E& edges, bool directed = true, size_t idx = 0) {
 
@@ -188,7 +209,6 @@ auto make_property_graph(const V& vertices, const E& edges, bool directed = true
   auto property_edges = make_property_edges(vertex_map, edges);
 
   Graph G(size(vertices));
-
   push_back_fill(property_edges, G, directed, idx);
 
   return G;
@@ -197,12 +217,15 @@ auto make_property_graph(const V& vertices, const E& edges, bool directed = true
 /**  
  *  Functions for building bipartite graphs
  */
-template <class I = std::vector<std::tuple<size_t, size_t>>, std::ranges::random_access_range V, std::ranges::random_access_range E>
+template <class I = std::vector<std::tuple<size_t, size_t>>,
+          std::ranges::random_access_range V,
+          std::ranges::random_access_range E>
 auto data_to_graph_edge_list(const V& left_vertices, const V& right_vertices, const E& edges) {
 
   auto left_map  = make_index_map(left_vertices);
   auto right_map = make_index_map(right_vertices);
 
+  // I index_edges;
   std::vector<std::tuple<size_t, size_t>> index_edges;
 
   for (size_t i = 0; i < size(edges); ++i) {
@@ -216,12 +239,14 @@ auto data_to_graph_edge_list(const V& left_vertices, const V& right_vertices, co
   return index_edges;
 }
 
-template <std::ranges::random_access_range V1, std::ranges::random_access_range V2, std::ranges::random_access_range E,
+template <std::ranges::random_access_range V1,
+          std::ranges::random_access_range V2,
+          std::ranges::random_access_range E,
           adjacency_list Graph = std::vector<std::vector<decltype(std::tuple_cat(std::make_tuple(size_t{}), props(*(begin(E{})))))>>>
 auto make_plain_bipartite_graph(const V1& left_vertices, const V2& right_vertices, const E& edges, size_t idx = 0) {
 
   auto index_edges = data_to_graph_edge_list(left_vertices, right_vertices, edges);
-  auto graph_size  = idx == 0 ? size(left_vertices) : size(right_vertices);
+  auto graph_size  = (idx == 0) ? size(left_vertices) : size(right_vertices);
 
   Graph G(size(left_vertices));
   push_back_fill(index_edges, G, true, idx);
@@ -229,7 +254,9 @@ auto make_plain_bipartite_graph(const V1& left_vertices, const V2& right_vertice
   return G;
 }
 
-template <std::ranges::random_access_range V1, std::ranges::random_access_range V2, std::ranges::random_access_range E,
+template <std::ranges::random_access_range V1,
+          std::ranges::random_access_range V2,
+          std::ranges::random_access_range E,
           class Graph = std::vector<std::vector<size_t>>>
 auto make_plain_bipartite_graphs(const V1& left_vertices, const V2& right_vertices, const E& edges) {
 
@@ -244,12 +271,14 @@ auto make_plain_bipartite_graphs(const V1& left_vertices, const V2& right_vertic
   return make_tuple(G, H);
 }
 
-template <size_t idx = 0, class Graph = std::vector<std::vector<size_t>>, std::ranges::random_access_range V,
+template <size_t idx = 0,
+          class Graph = std::vector<std::vector<size_t>>,
+          std::ranges::random_access_range V,
           std::ranges::random_access_range E>
 auto make_bipartite_graph(const V& left_vertices, const V& right_vertices, const E& edges) {
 
   auto index_edges = data_to_graph_edge_list(left_vertices, right_vertices, edges);
-  auto graph_size  = idx == 0 ? size(left_vertices) : size(right_vertices);
+  auto graph_size  = (idx == 0) ? size(left_vertices) : size(right_vertices);
 
   Graph G(size(left_vertices));
   push_back_fill(index_edges, G, true, idx);
@@ -257,7 +286,8 @@ auto make_bipartite_graph(const V& left_vertices, const V& right_vertices, const
   return G;
 }
 
-template <std::ranges::random_access_range V, std::ranges::random_access_range E,
+template <std::ranges::random_access_range V,
+          std::ranges::random_access_range E,
           adjacency_list Graph = std::vector<std::vector<decltype(std::tuple_cat(std::make_tuple(size_t{}), props(*(begin(E{})))))>>>
 auto make_bipartite_graphs(const V& left_vertices, const V& right_vertices, const E& edges) {
 
@@ -272,7 +302,8 @@ auto make_bipartite_graphs(const V& left_vertices, const V& right_vertices, cons
   return make_tuple(G, H);
 }
 
-template <class Graph1, class Graph2, class IndexGraph = std::vector<std::vector<std::tuple<size_t, size_t>>>>
+template <class Graph1, class Graph2,
+          class IndexGraph = std::vector<std::vector<std::tuple<size_t, size_t>>>>
 auto join(const Graph1& G, const Graph2& H) {
 
   std::vector<std::tuple<size_t, size_t, size_t>> s_overlap;

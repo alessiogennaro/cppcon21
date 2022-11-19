@@ -21,13 +21,13 @@
 #include <vector>
 
 #include "bfs_edge_range.hpp"
+#include "utilities.hpp"
+
 #include "imdb-graph.hpp"
 #include "karate-graph.hpp"
 #include "ospf-graph.hpp"
 #include "spice-graph.hpp"
-#include "utilities.hpp"
 
-#include <vector>
 
 int main() {
 

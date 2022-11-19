@@ -16,12 +16,14 @@
 // Simple example of finding bacon numbers from a given adjacency list graph
 //
 
-#include "bfs_edge_range.hpp"
-#include "imdb-graph.hpp"
-
 #include <iostream>
 #include <string>
 #include <vector>
+
+#include "bfs_edge_range.hpp"
+
+#include "imdb-graph.hpp"
+
 
 std::vector<std::vector<int>> costars{
     {1, 5, 6},
@@ -36,7 +38,8 @@ std::vector<std::vector<int>> costars{
     {4, 8},
     {7, 1},
     {2, 3},
-    {1, 4}};
+    {1, 4}
+};
 
 int main() {
 

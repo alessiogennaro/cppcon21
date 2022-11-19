@@ -22,8 +22,10 @@
 #include <vector>
 
 #include "bfs_edge_range.hpp"
-#include "imdb-graph.hpp"
 #include "utilities.hpp"
+
+#include "imdb-graph.hpp"
+
 
 int main() {
 

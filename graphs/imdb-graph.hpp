@@ -106,7 +106,7 @@ std::vector<std::tuple<size_t, size_t>> movie_actor_edge_list  {
 };
 
 
-  std::vector<std::tuple<size_t, size_t>> actor_movie_edge_list  {
+std::vector<std::tuple<size_t, size_t>> actor_movie_edge_list  {
 {     0,     0},
 {     0,     1},
 {     1,     0},
@@ -129,7 +129,7 @@ std::vector<std::tuple<size_t, size_t>> movie_actor_edge_list  {
 {    11,     4},
 {    12,     7},
 {    12,     8},
-  };
+};
 
 
 std::vector<std::vector<size_t>> movie_actor_index_adjacency_list  {
